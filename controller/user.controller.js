@@ -4,8 +4,7 @@ import { validationResult } from "express-validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-export const signup = async (req, res, next) => {
-    let {password} = req.body;
+export const signUp = async (req, res, next) => {
     try {
         let error = validationResult(req);
         if (!error.isEmpty()) {
@@ -13,38 +12,38 @@ export const signup = async (req, res, next) => {
         }
 
         let saltKey = bcrypt.genSaltSync(10);
-        let encryptPassword = bcrypt.hashSync(password, saltKey);
-        password = encryptPassword;
+        let encryptPassword = bcrypt.hashSync(req.body.password, saltKey);
+        req.body.password = encryptPassword;
 
-        let user = await User.create(req.body);
+        let inst = User.create(req.body);
         return res.status(201).json({ message: "sign up successfuly" });
 
     } catch (err) {
         console.log(err);
-        return res.status(501).json({ error: "server side error ", err })
+        return res.status(201).json({ message: "server side error ", err })
     }
 }
 
-export const signin = async (req, res, next) => {
+export const signIn = async (req, res, next) => {
     let { email, password } = req.body;
     try {
         let found = await User.findOne({ email });
         if (found) {
-            let status = bcrypt.compareSync(password, found.password);
+            let status = bcrypt.compareSync(password, User.password);
             if (status)
-                return res.status(200).json({ message: "sign in success",found,token: generateToken(found._id) });
+                return res.status(200).json({ message: "sin in success", found,token: generateToken(user._id) });
             else
                 return res.status(400).json({ err: "Invalid password" });
         }
 
         else
-            return res.status(400).json({ err: "invalid req" });
+            return res.status(400).json({ err: "invalid req/email id" });
     } catch (err) {
         return res.status(500).json({ err: "invalid req" });
     }
 }
 
-const generateToken = (userId)=>{
-    let token = jwt.sign({payload: userId},"fsdfsdrereioruxvxncnv");
-    return token; 
- }
+const generateToken = (userId) => {
+    let token = jwt.sign({ payload: userId }, "fsdfsdrereioruxvxncnv");
+    return token;
+}
